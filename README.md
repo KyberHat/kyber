@@ -1,39 +1,22 @@
-# Briar
-Briar is a messaging app designed for activists, journalists, and anyone else who needs a safe, easy and robust way to communicate.
+  <h1>Kyber</h1>
+  <p>
+    Kyber is a secure messaging app built as a fork of Briar, designed for activists, journalists, and anyone who values robust, private, and easy communication in challenging environments. Kyber builds on Briar's foundation, providing an even more enhanced and versatile tool for daily use.
+  </p>
 
-Unlike traditional messaging apps, Briar doesn't rely on a central server - messages are synchronized directly between the users' devices. 
+  <h2>About Kyber</h2>
+  <p>
+    Kyber retains Briar’s core feature of decentralization, enabling messages to sync directly between devices without a central server. Whether the internet is up or down, Kyber ensures your communication flows uninterrupted, connecting via Bluetooth, Wi-Fi, or Tor to protect against surveillance.
+  </p>
 
-If the Internet's down, Briar can sync via Bluetooth or Wi-Fi, keeping information flowing in a crisis. If the Internet's up, Briar can sync via the Tor network, protecting users and their relationships from surveillance.
+  <h3>Key Enhancements in Kyber:</h3>
+  <ul>
+    <li><strong>AES-256 Encryption:</strong> We have integrated AES-256 GBG encryption to provide even stronger data protection.</li>
+    <li><strong>App Disguise Mode:</strong> Kyber includes a timer feature that allows the app to disappear from your device temporarily, enhancing privacy and minimizing unwanted attention.</li>
+    <li><strong>Everyday Usability:</strong> Kyber has been optimized for smoother, everyday use with performance improvements and user interface tweaks.</li>
+    <li><strong>And Much More:</strong> Additional features designed to make Kyber a powerful tool for private communication in any situation.</li>
+  </ul>
 
-## Download Briar
 
-[<img src="https://briarproject.org//img/fdroid_badge.png"  width="240">](https://briarproject.org/fdroid)
-[<img src="https://briarproject.org/img/google_play_badge_web_generic.png"  width="240">](https://play.google.com/store/apps/details?id=org.briarproject.briar.android)
-
-You can also [download the APK file](https://briarproject.org/apk) directly from
-our site.
-
-## Useful links
-[Project website](https://briarproject.org/)
-
-[Source code](https://code.briarproject.org/briar/briar/tree/master)
-
-[User manual](https://briarproject.org/manual/)
-
-[Wiki](https://code.briarproject.org/briar/briar/-/wikis/home)
-
-[Privacy policy](https://briarproject.org/privacy)
-
-## Reproducible builds
-
-We provide [docker images](https://code.briarproject.org/briar/briar-reproducer#briar-reproducer)
-to ease the task of verifying that the published APK binaries
-include nothing but our publicly available source code.
-
-You can either use those images or use them as a blueprint to build your own environment
-for reproduction.
-
-## Donate
-
-[![Donate using Liberapay](https://briarproject.org/img/liberapay.svg)](https://liberapay.com/Briar/donate)   
-Bitcoin and BCH: 1NZCKkUCtJV2U2Y9hDb9uq8S7ksFCFGR6K
+  <p>
+    Special thanks to the Briar team for their incredible work in creating a secure messaging foundation. Kyber stands on Briar’s shoulders, and without their contributions, this project would not have been possible.
+  </p>
