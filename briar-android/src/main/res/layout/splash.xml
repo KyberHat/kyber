@@ -9,8 +9,8 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_gravity="center"
-		android:layout_margin="@dimen/margin_xxlarge"
+		android:scaleType="centerCrop"
 		android:contentDescription="@string/app_name"
-		app:srcCompat="@drawable/splash_screen" />
+		app:srcCompat="@drawable/kyber" />
 
 </FrameLayout>
