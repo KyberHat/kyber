@@ -8,18 +8,19 @@ import org.briarproject.nullsafety.NotNullByDefault;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
-import static org.briarproject.bramble.api.transport.TransportConstants.FRAME_HEADER_LENGTH;
+//import static org.briarproject.bramble.api.transport.TransportConstants.FRAME_HEADER_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.FRAME_HEADER_PLAINTEXT_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.FRAME_NONCE_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.MAC_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.MAX_FRAME_LENGTH;
-import static org.briarproject.bramble.api.transport.TransportConstants.MAX_PAYLOAD_LENGTH;
+//import static org.briarproject.bramble.api.transport.TransportConstants.MAX_PAYLOAD_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.PROTOCOL_VERSION;
-import static org.briarproject.bramble.api.transport.TransportConstants.STREAM_HEADER_LENGTH;
+//import static org.briarproject.bramble.api.transport.TransportConstants.STREAM_HEADER_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.STREAM_HEADER_NONCE_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.STREAM_HEADER_PLAINTEXT_LENGTH;
 import static org.briarproject.bramble.util.ByteUtils.INT_16_BYTES;
@@ -42,9 +43,29 @@ class StreamEncrypterImpl implements StreamEncrypter {
 	private long frameNumber;
 	private boolean writeTag, writeStreamHeader;
 
+	/**
+	 * The length of the stream header in bytes.
+	 */
+	private int STREAM_HEADER_LENGTH = STREAM_HEADER_NONCE_LENGTH
+			+  new AESGCM().computeOutputLength(STREAM_HEADER_PLAINTEXT_LENGTH) + MAC_LENGTH;
+
+	/**
+	 * The length of the encrypted and authenticated frame header in bytes.
+	 */
+	int FRAME_HEADER_LENGTH =  new AESGCM().computeOutputLength(FRAME_HEADER_PLAINTEXT_LENGTH) + MAC_LENGTH;
+
+	/**
+	 * The maximum total length of the frame payload and padding in bytes.
+	 */
+	private int MAX_PAYLOAD_LENGTH =MAX_FRAME_LENGTH -(new AESGCM().computeOutputLength(MAX_FRAME_LENGTH)-MAX_FRAME_LENGTH)- FRAME_HEADER_LENGTH
+			- MAC_LENGTH;
+
+
+
 	StreamEncrypterImpl(OutputStream out, AuthenticatedCipher cipher,
 			long streamNumber, @Nullable byte[] tag, byte[] streamHeaderNonce,
 			SecretKey streamHeaderKey, SecretKey frameKey) {
+
 		this.out = out;
 		this.cipher = cipher;
 		this.streamNumber = streamNumber;
@@ -98,15 +119,24 @@ class StreamEncrypterImpl implements StreamEncrypter {
 			int encrypted = cipher.process(framePlaintext, 0,
 					payloadLength + paddingLength, frameCiphertext,
 					FRAME_HEADER_LENGTH);
-			if (encrypted != payloadLength + paddingLength + MAC_LENGTH)
+			if (encrypted !=
+					new AESGCM().computeOutputLength(payloadLength + paddingLength) + MAC_LENGTH)
 				throw new RuntimeException();
 		} catch (GeneralSecurityException badCipher) {
 			throw new RuntimeException(badCipher);
 		}
 		// Write the frame
+		/*
 		out.write(frameCiphertext, 0, FRAME_HEADER_LENGTH + payloadLength
 				+ paddingLength + MAC_LENGTH);
 		frameNumber++;
+		*/
+		out.write(frameCiphertext, 0, FRAME_HEADER_LENGTH + new AESGCM().computeOutputLength(payloadLength
+				+ paddingLength )+ MAC_LENGTH);
+		frameNumber++;
+
+		Arrays.fill(frameCiphertext, (byte) 0);
+
 	}
 
 	private void writeTag() throws IOException {
@@ -132,7 +162,7 @@ class StreamEncrypterImpl implements StreamEncrypter {
 			int encrypted = cipher.process(streamHeaderPlaintext, 0,
 					STREAM_HEADER_PLAINTEXT_LENGTH, streamHeaderCiphertext,
 					STREAM_HEADER_NONCE_LENGTH);
-			if (encrypted != STREAM_HEADER_PLAINTEXT_LENGTH + MAC_LENGTH)
+			if (encrypted != new AESGCM().computeOutputLength(STREAM_HEADER_PLAINTEXT_LENGTH) + MAC_LENGTH)
 				throw new RuntimeException();
 		} catch (GeneralSecurityException badCipher) {
 			throw new RuntimeException(badCipher);

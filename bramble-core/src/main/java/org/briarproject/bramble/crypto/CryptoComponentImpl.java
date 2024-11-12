@@ -379,8 +379,14 @@ class CryptoComponentImpl implements CryptoComponent {
 		secureRandom.nextBytes(iv);
 		// The output contains the format version, salt, cost parameter, IV,
 		// ciphertext and MAC
+
+
+		//we need to take into account the AESGCM increase in size
+		//int outputLen = 1 + salt.length + INT_32_BYTES + iv.length
+		//		+ input.length + macBytes;
+
 		int outputLen = 1 + salt.length + INT_32_BYTES + iv.length
-				+ input.length + macBytes;
+				+ new AESGCM().computeOutputLength( input.length )+ macBytes;
 		byte[] output = new byte[outputLen];
 		int outputOff = 0;
 		// Format version
@@ -406,6 +412,7 @@ class CryptoComponentImpl implements CryptoComponent {
 			throw new RuntimeException(e);
 		}
 	}
+
 
 	@Override
 	public byte[] decryptWithPassword(byte[] input, String password,
@@ -460,7 +467,8 @@ class CryptoComponentImpl implements CryptoComponent {
 		// Try to decrypt the ciphertext (may be invalid)
 		try {
 			int inputLen = input.length - inputOff;
-			byte[] output = new byte[inputLen - macBytes];
+			//need to compute how much was plaintext
+			byte[] output = new byte[new AESGCM().computeInputLength( inputLen) - macBytes];
 			cipher.process(input, inputOff, inputLen, output, 0);
 			return output;
 		} catch (GeneralSecurityException e) {

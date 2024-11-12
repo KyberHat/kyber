@@ -14,14 +14,14 @@ import java.security.GeneralSecurityException;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
-import static org.briarproject.bramble.api.transport.TransportConstants.FRAME_HEADER_LENGTH;
+//import static org.briarproject.bramble.api.transport.TransportConstants.FRAME_HEADER_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.FRAME_HEADER_PLAINTEXT_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.FRAME_NONCE_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.MAC_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.MAX_FRAME_LENGTH;
-import static org.briarproject.bramble.api.transport.TransportConstants.MAX_PAYLOAD_LENGTH;
+//import static org.briarproject.bramble.api.transport.TransportConstants.MAX_PAYLOAD_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.PROTOCOL_VERSION;
-import static org.briarproject.bramble.api.transport.TransportConstants.STREAM_HEADER_LENGTH;
+//import static org.briarproject.bramble.api.transport.TransportConstants.STREAM_HEADER_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.STREAM_HEADER_NONCE_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.STREAM_HEADER_PLAINTEXT_LENGTH;
 import static org.briarproject.bramble.util.ByteUtils.INT_16_BYTES;
@@ -36,6 +36,24 @@ class StreamDecrypterImpl implements StreamDecrypter {
 	private final long streamNumber;
 	private final SecretKey streamHeaderKey;
 	private final byte[] frameNonce, frameHeader, frameCiphertext;
+	/**
+	 * The length of the stream header in bytes.
+	 */
+	private int STREAM_HEADER_LENGTH = STREAM_HEADER_NONCE_LENGTH
+			+  new AESGCM().computeOutputLength(STREAM_HEADER_PLAINTEXT_LENGTH) + MAC_LENGTH;
+
+	/**
+	 * The length of the encrypted and authenticated frame header in bytes.
+	 */
+	int FRAME_HEADER_LENGTH =  new AESGCM().computeOutputLength(FRAME_HEADER_PLAINTEXT_LENGTH) + MAC_LENGTH;
+
+	/**
+	 * The maximum total length of the frame payload and padding in bytes.
+	 */
+	private int MAX_PAYLOAD_LENGTH = MAX_FRAME_LENGTH -(new AESGCM().computeOutputLength(MAX_FRAME_LENGTH)-MAX_FRAME_LENGTH) - FRAME_HEADER_LENGTH
+			- MAC_LENGTH;
+
+
 
 	@Nullable
 	private SecretKey frameKey;
@@ -92,7 +110,7 @@ class StreamDecrypterImpl implements StreamDecrypter {
 		if (payloadLength + paddingLength > MAX_PAYLOAD_LENGTH)
 			throw new FormatException();
 		// Read the payload and padding
-		int frameLength = FRAME_HEADER_LENGTH + payloadLength + paddingLength
+		int frameLength = FRAME_HEADER_LENGTH +new AESGCM().computeOutputLength( payloadLength + paddingLength)
 				+ MAC_LENGTH;
 		while (offset < frameLength) {
 			int read = in.read(frameCiphertext, offset, frameLength - offset);
@@ -101,15 +119,23 @@ class StreamDecrypterImpl implements StreamDecrypter {
 		}
 		// Decrypt and authenticate the payload and padding
 		FrameEncoder.encodeNonce(frameNonce, frameNumber, false);
-		try {
-			cipher.init(false, frameKey, frameNonce);
-			int decrypted = cipher.process(frameCiphertext, FRAME_HEADER_LENGTH,
-					payloadLength + paddingLength + MAC_LENGTH, payload, 0);
-			if (decrypted != payloadLength + paddingLength)
-				throw new RuntimeException();
-		} catch (GeneralSecurityException e) {
-			throw new FormatException();
+
+		//the stream cipher have a different behavior with deciphering 0 data
+		if(!(payloadLength + paddingLength==0)) {
+			try {
+				cipher.init(false, frameKey, frameNonce);
+				int decrypted =
+						cipher.process(frameCiphertext, FRAME_HEADER_LENGTH,
+								new AESGCM().computeOutputLength(
+										payloadLength + paddingLength) +
+										MAC_LENGTH, payload, 0);
+				if (decrypted != payloadLength + paddingLength)
+					throw new RuntimeException();
+			} catch (GeneralSecurityException e) {
+				throw new FormatException();
+			}
 		}
+
 		// If there's any padding it must be all zeroes
 		for (int i = 0; i < paddingLength; i++)
 			if (payload[payloadLength + i] != 0) throw new FormatException();
@@ -137,7 +163,8 @@ class StreamDecrypterImpl implements StreamDecrypter {
 			cipher.init(false, streamHeaderKey, streamHeaderNonce);
 			int decrypted = cipher.process(streamHeaderCiphertext,
 					STREAM_HEADER_NONCE_LENGTH,
-					STREAM_HEADER_PLAINTEXT_LENGTH + MAC_LENGTH,
+					//	STREAM_HEADER_PLAINTEXT_LENGTH + MAC_LENGTH,
+					new AESGCM().computeOutputLength(STREAM_HEADER_PLAINTEXT_LENGTH) + MAC_LENGTH,
 					streamHeaderPlaintext, 0);
 			if (decrypted != STREAM_HEADER_PLAINTEXT_LENGTH)
 				throw new RuntimeException();
