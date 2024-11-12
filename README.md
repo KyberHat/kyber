@@ -1,6 +1,6 @@
   <h1>Kyber</h1>
   <p>
-    Kyber is a secure messaging app built as a fork of Briar, designed for activists, journalists, and anyone who values robust, private, and easy communication in challenging environments. Kyber builds on Briar's foundation, providing an even more enhanced and versatile tool for daily use.
+    Kyber is a secure messaging app built as a fork of Briar, designed for activists, journalists, and anyone who values robust, private, and easy communication in challenging environments. Kyber builds on Briar's Project, providing an even more enhanced and versatile tool for daily use.
   </p>
 
   <h2>About Kyber</h2>
@@ -18,5 +18,5 @@
 
 
   <p>
-    Special thanks to the Briar team for their incredible work in creating a secure messaging foundation. Kyber stands on Briar’s shoulders, and without their contributions, this project would not have been possible.
+    Special thanks to the Briar team for their incredible work in creating a secure messenger. Kyber stands on Briar’s shoulders, and without their contributions, this project would not have been possible.
   </p>
