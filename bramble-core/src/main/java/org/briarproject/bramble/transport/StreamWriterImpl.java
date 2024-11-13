@@ -3,12 +3,21 @@ package org.briarproject.bramble.transport;
 import org.briarproject.bramble.api.crypto.StreamEncrypter;
 import org.briarproject.bramble.api.transport.StreamWriter;
 import org.briarproject.nullsafety.NotNullByDefault;
+import org.briarproject.bramble.crypto.AESGCM;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
+
+import static org.briarproject.bramble.api.transport.TransportConstants.FRAME_HEADER_PLAINTEXT_LENGTH;
+import static org.briarproject.bramble.api.transport.TransportConstants.MAC_LENGTH;
+import static org.briarproject.bramble.api.transport.TransportConstants.MAX_FRAME_LENGTH;
+import static org.briarproject.bramble.api.transport.TransportConstants.STREAM_HEADER_NONCE_LENGTH;
+import static org.briarproject.bramble.api.transport.TransportConstants.STREAM_HEADER_PLAINTEXT_LENGTH;
+
+//import static org.briarproject.bramble.api.transport.TransportConstants.MAX_PAYLOAD_LENGTH;
 import static org.briarproject.bramble.api.transport.TransportConstants.MAX_PAYLOAD_LENGTH;
 
 /**
@@ -20,6 +29,23 @@ import static org.briarproject.bramble.api.transport.TransportConstants.MAX_PAYL
 @NotNullByDefault
 class StreamWriterImpl extends OutputStream implements StreamWriter {
 
+
+	/**
+	 * The length of the stream header in bytes.
+	 */
+	private static int STREAM_HEADER_LENGTH = STREAM_HEADER_NONCE_LENGTH
+			+  new AESGCM().computeOutputLength(STREAM_HEADER_PLAINTEXT_LENGTH) + MAC_LENGTH;
+
+	/**
+	 * The length of the encrypted and authenticated frame header in bytes.
+	 */
+	private static int FRAME_HEADER_LENGTH =  new AESGCM().computeOutputLength(FRAME_HEADER_PLAINTEXT_LENGTH) + MAC_LENGTH;
+
+	/**
+	 * The maximum total length of the frame payload and padding in bytes.
+	 */
+	private static int MAX_PAYLOAD_LENGTH =  MAX_FRAME_LENGTH -(new AESGCM().computeOutputLength(MAX_FRAME_LENGTH)-MAX_FRAME_LENGTH) - FRAME_HEADER_LENGTH
+			- MAC_LENGTH;
 	private final StreamEncrypter encrypter;
 	private final byte[] payload;
 

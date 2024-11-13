@@ -413,7 +413,6 @@ class CryptoComponentImpl implements CryptoComponent {
 		}
 	}
 
-
 	@Override
 	public byte[] decryptWithPassword(byte[] input, String password,
 			@Nullable KeyStrengthener keyStrengthener)

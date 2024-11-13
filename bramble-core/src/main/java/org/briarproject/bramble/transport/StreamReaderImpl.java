@@ -1,6 +1,7 @@
 package org.briarproject.bramble.transport;
 
 import org.briarproject.bramble.api.crypto.StreamDecrypter;
+import org.briarproject.bramble.crypto.AESGCM;
 import org.briarproject.nullsafety.NotNullByDefault;
 
 import java.io.IOException;
@@ -9,6 +10,13 @@ import java.io.InputStream;
 import javax.annotation.concurrent.NotThreadSafe;
 
 import static org.briarproject.bramble.api.transport.TransportConstants.MAX_PAYLOAD_LENGTH;
+import static org.briarproject.bramble.api.transport.TransportConstants.FRAME_HEADER_PLAINTEXT_LENGTH;
+import static org.briarproject.bramble.api.transport.TransportConstants.MAC_LENGTH;
+import static org.briarproject.bramble.api.transport.TransportConstants.MAX_FRAME_LENGTH;
+import static org.briarproject.bramble.api.transport.TransportConstants.STREAM_HEADER_NONCE_LENGTH;
+import static org.briarproject.bramble.api.transport.TransportConstants.STREAM_HEADER_PLAINTEXT_LENGTH;
+
+//import static org.briarproject.bramble.api.transport.TransportConstants.MAX_PAYLOAD_LENGTH;
 
 /**
  * An {@link InputStream} that unpacks payload data from transport frames.
@@ -16,6 +24,24 @@ import static org.briarproject.bramble.api.transport.TransportConstants.MAX_PAYL
 @NotThreadSafe
 @NotNullByDefault
 class StreamReaderImpl extends InputStream {
+
+
+	/**
+	 * The length of the stream header in bytes.
+	 */
+	private static int STREAM_HEADER_LENGTH = STREAM_HEADER_NONCE_LENGTH
+			+  MAX_FRAME_LENGTH -(new AESGCM().computeOutputLength(MAX_FRAME_LENGTH)-MAX_FRAME_LENGTH) + MAC_LENGTH;
+
+	/**
+	 * The length of the encrypted and authenticated frame header in bytes.
+	 */
+	private static int FRAME_HEADER_LENGTH =  new AESGCM().computeOutputLength(FRAME_HEADER_PLAINTEXT_LENGTH) + MAC_LENGTH;
+
+	/**
+	 * The maximum total length of the frame payload and padding in bytes.
+	 */
+	private static int MAX_PAYLOAD_LENGTH = MAX_FRAME_LENGTH -(new AESGCM().computeOutputLength(MAX_FRAME_LENGTH)-MAX_FRAME_LENGTH)- FRAME_HEADER_LENGTH
+			- MAC_LENGTH;
 
 	private final StreamDecrypter decrypter;
 	private final byte[] payload;

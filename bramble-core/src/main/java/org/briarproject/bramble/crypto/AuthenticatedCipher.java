@@ -6,6 +6,7 @@ import org.briarproject.nullsafety.NotNullByDefault;
 import java.security.GeneralSecurityException;
 
 @NotNullByDefault
+public
 interface AuthenticatedCipher {
 
 	/**
