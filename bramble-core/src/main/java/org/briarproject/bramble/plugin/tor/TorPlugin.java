@@ -36,6 +36,7 @@ import org.briarproject.onionwrapper.TorWrapper.TorState;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -346,10 +347,10 @@ class TorPlugin implements DuplexPlugin, EventListener {
 	private void connect(TransportProperties p, ConnectionHandler h) {
 		wakefulIoExecutor.execute(() -> {
 			DuplexTransportConnection d = createConnection(p);
-			if (d != null) {
+//			if (d != null) {
 				backoff.reset();
 				h.handleConnection(d);
-			}
+//			}
 		});
 	}
 
@@ -370,7 +371,10 @@ class TorPlugin implements DuplexPlugin, EventListener {
 			if (LOG.isLoggable(INFO)) {
 				LOG.info("Connecting to v3 " + scrubOnion(onion3));
 			}
-			s = torSocketFactory.createSocket(onion3 + ".onion", 80);
+			Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", 9050));
+			s = new Socket(proxy);
+//			s = torSocketFactory.createSocket(onion3 + ".onion", 80);
+			s.connect(new InetSocketAddress(onion3 + ".onion", 80));
 			s.setSoTimeout(socketTimeout);
 			if (LOG.isLoggable(INFO)) {
 				LOG.info("Connected to v3 " + scrubOnion(onion3));

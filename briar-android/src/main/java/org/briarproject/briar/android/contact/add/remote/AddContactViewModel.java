@@ -3,13 +3,21 @@ package org.briarproject.briar.android.contact.add.remote;
 import android.app.Application;
 
 import org.briarproject.bramble.api.FormatException;
+import org.briarproject.bramble.api.Pair;
 import org.briarproject.bramble.api.UnsupportedVersionException;
+import org.briarproject.bramble.api.account.AccountManager;
 import org.briarproject.bramble.api.contact.ContactManager;
+import org.briarproject.bramble.api.contact.HandshakeManager;
 import org.briarproject.bramble.api.contact.PendingContact;
+import org.briarproject.bramble.api.contact.PendingContactState;
+import org.briarproject.bramble.api.db.DatabaseComponent;
 import org.briarproject.bramble.api.db.DatabaseExecutor;
 import org.briarproject.bramble.api.db.DbException;
 import org.briarproject.bramble.api.db.NoSuchPendingContactException;
+import org.briarproject.bramble.api.db.Transaction;
 import org.briarproject.bramble.api.db.TransactionManager;
+import org.briarproject.bramble.api.identity.IdentityManager;
+import org.briarproject.bramble.api.identity.LocalAuthor;
 import org.briarproject.bramble.api.lifecycle.LifecycleManager;
 import org.briarproject.bramble.api.system.AndroidExecutor;
 import org.briarproject.briar.android.viewmodel.DbViewModel;
@@ -19,6 +27,7 @@ import org.briarproject.briar.android.viewmodel.MutableLiveEvent;
 import org.briarproject.nullsafety.NotNullByDefault;
 
 import java.security.GeneralSecurityException;
+import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.logging.Logger;
 
@@ -50,6 +59,11 @@ public class AddContactViewModel extends DbViewModel {
 	@Nullable
 	private String remoteHandshakeLink;
 
+//	private final TransactionManager db;
+
+//	@Inject
+//	protected IdentityManager identityManager;
+
 	@Inject
 	AddContactViewModel(Application application,
 			ContactManager contactManager,
@@ -59,6 +73,7 @@ public class AddContactViewModel extends DbViewModel {
 			AndroidExecutor androidExecutor) {
 		super(application, dbExecutor, lifecycleManager, db, androidExecutor);
 		this.contactManager = contactManager;
+		this.db = db;
 	}
 
 	void onCreate() {
@@ -109,6 +124,26 @@ public class AddContactViewModel extends DbViewModel {
 			try {
 				contactManager.addPendingContact(remoteHandshakeLink, nickname);
 				addContactResult.postValue(new LiveResult<>(true));
+
+//				Collection<Pair<PendingContact, PendingContactState>>
+//						pendingContacts = contactManager.getPendingContacts();
+//				if (!pendingContacts.isEmpty()) {
+//					// Get the first item using an iterator
+//					Pair<PendingContact, PendingContactState> firstItem = pendingContacts.iterator().next();
+//
+//					// Access the individual elements of the Pair
+//					PendingContact pendingContact = firstItem.getFirst();
+//
+//					LocalAuthor localAuthor = identityManager.getLocalAuthor();
+//					Transaction txn = db.startTransaction(false);
+//
+//					HandshakeManager.HandshakeResult result = handshakeManager.handshake(pendingContact.getId(), in, out);
+//
+//					contactManager.addContact(txn, pendingContact.getId(), localAuthor, localAuthor.getId(), true);
+//				} else {
+//					return;
+//				}
+
 			} catch (UnsupportedVersionException e) {
 				logException(LOG, WARNING, e);
 				addContactResult.postValue(new LiveResult<>(e));

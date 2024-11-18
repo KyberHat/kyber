@@ -99,6 +99,33 @@ class OutgoingHandshakeConnection extends HandshakeConnection
 					result.isAlice(), false);
 			connectionRegistry.unregisterConnection(pendingContactId, true);
 			// Reuse the connection as a transport connection
+//			connectionManager.manageOutgoingConnection(contact.getId(),
+//					transportId, connection);
+//		} catch (IOException | DbException e) {
+//			logException(LOG, WARNING, e);
+//			onError();
+//			connectionRegistry.unregisterConnection(pendingContactId, false);
+//		}
+
+		// Skip the tag recognition and incoming key validation
+//		try {
+//			// Directly process the connection without requiring inbound validation
+//			HandshakeResult result = handshakeManager.handshake(pendingContactId, null, out);
+//			Contact contact = contactExchangeManager.exchangeContacts(
+//					pendingContactId, connection, result.getMasterKey(),
+//					result.isAlice(), false);
+//
+//			// Optional: Log or handle result if necessary
+//			LOG.info("Handshake completed with single key");
+//
+//			// Notify the connection registry
+//			if (!connectionRegistry.registerConnection(pendingContactId)) {
+//				LOG.info("Redundant rendezvous connection");
+//				onError();
+//				return;
+//			}
+
+			// Reuse the connection as a transport connection
 			connectionManager.manageOutgoingConnection(contact.getId(),
 					transportId, connection);
 		} catch (IOException | DbException e) {
