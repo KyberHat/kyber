@@ -13,6 +13,7 @@ import org.briarproject.nullsafety.NotNullByDefault;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
@@ -47,7 +48,12 @@ abstract class Connection {
 			TransportId transportId) {
 		try {
 			byte[] tag = readTag(reader.getInputStream());
-			return keyManager.getStreamContext(transportId, tag);
+			LOG.info("Read tag: " + Arrays.toString(tag));
+			StreamContext context = keyManager.getStreamContext(transportId, tag);
+			if (context == null) {
+				LOG.warning("Failed to recognize tag, no StreamContext found.");
+			}
+			return context;
 		} catch (IOException | DbException e) {
 			logException(LOG, WARNING, e);
 			return null;

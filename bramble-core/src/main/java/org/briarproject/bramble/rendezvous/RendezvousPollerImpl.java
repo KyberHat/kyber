@@ -188,6 +188,7 @@ class RendezvousPollerImpl implements RendezvousPoller, Service, EventListener {
 			}
 			if (cs.numEndpoints == 0) broadcastState(p.getId(), OFFLINE);
 			else broadcastState(p.getId(), ADDING_CONTACT);
+
 			if (cryptoStates.size() == 1) {
 				LOG.info("Starting poller");
 				requireNull(pollTask);

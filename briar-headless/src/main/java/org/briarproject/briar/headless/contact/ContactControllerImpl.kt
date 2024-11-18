@@ -10,6 +10,7 @@ import org.briarproject.bramble.api.connection.ConnectionRegistry
 import org.briarproject.bramble.api.contact.ContactManager
 import org.briarproject.bramble.api.contact.HandshakeLinkConstants.LINK_REGEX
 import org.briarproject.bramble.api.contact.PendingContactId
+import org.briarproject.bramble.api.contact.PendingContactState
 import org.briarproject.bramble.api.contact.event.ContactAddedEvent
 import org.briarproject.bramble.api.contact.event.PendingContactAddedEvent
 import org.briarproject.bramble.api.contact.event.PendingContactRemovedEvent
@@ -60,8 +61,20 @@ constructor(
             webSocket.sendEvent(EVENT_CONTACT_ADDED, e.output())
         }
         is PendingContactStateChangedEvent -> {
-            webSocket.sendEvent(EVENT_PENDING_CONTACT_STATE_CHANGED, e.output())
+            // Modify handling of state changes to reflect new transitions
+            if (e.pendingContactState == PendingContactState.WAITING_FOR_CONNECTION) {
+                // Move to another state if necessary
+                webSocket.sendEvent(
+                    EVENT_PENDING_CONTACT_STATE_CHANGED, JsonDict(
+                        "pendingContactId" to e.id.bytes,
+                        "state" to PendingContactState.ADDING_CONTACT.output() // Example change
+                    )
+                )
+            } else {
+                webSocket.sendEvent(EVENT_PENDING_CONTACT_STATE_CHANGED, e.output())
+            }
         }
+
         is PendingContactAddedEvent -> {
             webSocket.sendEvent(EVENT_PENDING_CONTACT_ADDED, e.output())
         }
@@ -74,6 +87,8 @@ constructor(
         is ContactDisconnectedEvent -> {
             webSocket.sendEvent(EVENT_CONTACT_DISCONNECTED, e.output())
         }
+
+
         else -> {
         }
     }
