@@ -187,7 +187,7 @@ class RendezvousPollerImpl implements RendezvousPoller, Service, EventListener {
 				}
 			}
 			if (cs.numEndpoints == 0) broadcastState(p.getId(), OFFLINE);
-			else broadcastState(p.getId(), WAITING_FOR_CONNECTION);
+			else broadcastState(p.getId(), ADDING_CONTACT);
 			if (cryptoStates.size() == 1) {
 				LOG.info("Starting poller");
 				requireNull(pollTask);
@@ -351,7 +351,7 @@ class RendezvousPollerImpl implements RendezvousPoller, Service, EventListener {
 			if (endpoint != null) {
 				endpoints.put(p, endpoint);
 				if (++cs.numEndpoints == 1)
-					broadcastState(p, WAITING_FOR_CONNECTION);
+					broadcastState(p, ADDING_CONTACT);
 			}
 		}
 		requireNull(pluginStates.put(t, new PluginState(plugin, endpoints)));

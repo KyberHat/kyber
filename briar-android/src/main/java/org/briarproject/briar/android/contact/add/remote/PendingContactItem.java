@@ -31,8 +31,7 @@ class PendingContactItem {
 	}
 
 	PendingContactState getState() {
-		if (state == WAITING_FOR_CONNECTION &&
-				System.currentTimeMillis() - lastPoll < POLL_DURATION_MS) {
+		if (state == WAITING_FOR_CONNECTION ) {
 			return CONNECTING;
 		}
 		return state;

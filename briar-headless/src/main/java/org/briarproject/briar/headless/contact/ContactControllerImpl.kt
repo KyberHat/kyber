@@ -96,34 +96,39 @@ constructor(
     override fun addPendingContact(ctx: Context): Context {
         val link = ctx.getFromJson(objectMapper, "link")
         val alias = ctx.getFromJson(objectMapper, "alias")
+
+        // Validate link format if desired (optional)
         if (!LINK_REGEX.matcher(link).find()) {
             ctx.status(BAD_REQUEST_400)
             val details = mapOf("error" to "INVALID_LINK")
             return ctx.json(details)
         }
+
+        // Ensure alias length is valid
         checkAliasLength(alias)
+
         val pendingContact = try {
+            // Directly add the pending contact without requiring additional verification
             contactManager.addPendingContact(link, alias)
         } catch (e: GeneralSecurityException) {
             ctx.status(BAD_REQUEST_400)
-            val details = mapOf("error" to "INVALID_PUBLIC_KEY")
-            return ctx.json(details)
+            return ctx.json(mapOf("error" to "INVALID_PUBLIC_KEY"))
         } catch (e: ContactExistsException) {
             ctx.status(FORBIDDEN_403)
-            val details =
-                mapOf("error" to "CONTACT_EXISTS", "remoteAuthorName" to e.remoteAuthor.name)
-            return ctx.json(details)
+            return ctx.json(mapOf("error" to "CONTACT_EXISTS", "remoteAuthorName" to e.remoteAuthor.name))
         } catch (e: PendingContactExistsException) {
             ctx.status(FORBIDDEN_403)
-            val details = mapOf(
+            return ctx.json(mapOf(
                 "error" to "PENDING_EXISTS",
                 "pendingContactId" to e.pendingContact.id.bytes,
                 "pendingContactAlias" to e.pendingContact.alias
-            )
-            return ctx.json(details)
+            ))
         }
+
+        // Return the newly created pending contact
         return ctx.json(pendingContact.output())
     }
+
 
     override fun listPendingContacts(ctx: Context): Context {
         val pendingContacts = contactManager.pendingContacts.map { pair ->

@@ -69,12 +69,15 @@ class ContactManagerImpl implements ContactManager, EventListener {
 		hooks.add(hook);
 	}
 
+	private boolean isContactToBeVerifiedInOneWayHandshake(){
+		return true;
+	}
 	@Override
 	public ContactId addContact(Transaction txn, Author remote, AuthorId local,
 			SecretKey rootKey, long timestamp, boolean alice, boolean verified,
 			boolean active) throws DbException {
+		verified = isContactToBeVerifiedInOneWayHandshake();
 		ContactId c = db.addContact(txn, remote, local, null, verified);
-		keyManager.addRotationKeys(txn, c, rootKey, timestamp, alice, active);
 		Contact contact = db.getContact(txn, c);
 		for (ContactHook hook : hooks) hook.addingContact(txn, contact);
 		return c;
@@ -85,6 +88,7 @@ class ContactManagerImpl implements ContactManager, EventListener {
 			Author remote, AuthorId local, SecretKey rootKey, long timestamp,
 			boolean alice, boolean verified, boolean active)
 			throws DbException, GeneralSecurityException {
+		verified = isContactToBeVerifiedInOneWayHandshake();
 		PendingContact pendingContact = db.getPendingContact(txn, p);
 		db.removePendingContact(txn, p);
 		states.remove(p);
@@ -104,6 +108,7 @@ class ContactManagerImpl implements ContactManager, EventListener {
 	@Override
 	public ContactId addContact(Transaction txn, Author remote, AuthorId local,
 			boolean verified) throws DbException {
+		verified = isContactToBeVerifiedInOneWayHandshake();
 		ContactId c = db.addContact(txn, remote, local, null, verified);
 		Contact contact = db.getContact(txn, c);
 		for (ContactHook hook : hooks) hook.addingContact(txn, contact);
@@ -114,9 +119,10 @@ class ContactManagerImpl implements ContactManager, EventListener {
 	public ContactId addContact(Author remote, AuthorId local,
 			SecretKey rootKey, long timestamp, boolean alice, boolean verified,
 			boolean active) throws DbException {
+
 		return db.transactionWithResult(false, txn ->
 				addContact(txn, remote, local, rootKey, timestamp, alice,
-						verified, active));
+						 isContactToBeVerifiedInOneWayHandshake(), active));
 	}
 
 	@Override
