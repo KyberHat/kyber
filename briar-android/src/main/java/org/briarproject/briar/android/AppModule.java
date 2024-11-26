@@ -49,6 +49,7 @@ import org.briarproject.briar.android.mailbox.MailboxModule;
 import org.briarproject.briar.android.navdrawer.NavDrawerModule;
 import org.briarproject.briar.android.privategroup.conversation.GroupConversationModule;
 import org.briarproject.briar.android.privategroup.list.GroupListModule;
+import org.briarproject.briar.android.timer.TimerPinModule;
 import org.briarproject.briar.android.removabledrive.TransferDataModule;
 import org.briarproject.briar.android.reporting.DevReportModule;
 import org.briarproject.briar.android.settings.SettingsModule;
@@ -91,6 +92,7 @@ import static org.briarproject.briar.android.TestingConstants.IS_DEBUG_BUILD;
 		SetupModule.class,
 		DozeHelperModule.class,
 		AddNearbyContactModule.class,
+		TimerPinModule.class,
 		LoggingModule.class,
 		LoginModule.class,
 		NavDrawerModule.class,

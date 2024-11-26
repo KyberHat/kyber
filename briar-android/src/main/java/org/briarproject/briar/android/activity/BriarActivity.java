@@ -19,6 +19,7 @@ import org.briarproject.briar.android.controller.DbController;
 import org.briarproject.briar.android.controller.handler.UiResultHandler;
 import org.briarproject.briar.android.login.StartupActivity;
 import org.briarproject.briar.android.logout.ExitActivity;
+import org.briarproject.briar.android.timer.TimerActivity;
 import org.briarproject.briar.api.android.LockManager;
 import org.briarproject.nullsafety.MethodsNotNullByDefault;
 import org.briarproject.nullsafety.ParametersNotNullByDefault;
@@ -70,6 +71,9 @@ public abstract class BriarActivity extends BaseActivity {
 	@Inject
 	AndroidWakeLockManager wakeLockManager;
 
+	private final static int REQUEST_PIN = 592;
+
+
 	@Override
 	public void onStart() {
 		super.onStart();
@@ -80,6 +84,10 @@ public abstract class BriarActivity extends BaseActivity {
 	protected void onActivityResult(int request, int result,
 			@Nullable Intent data) {
 		super.onActivityResult(request, result, data);
+		if(request == REQUEST_PIN && result == RESULT_OK){
+			startupActivity();
+			return;
+		}
 		if (request == REQUEST_PASSWORD) {
 			// Recreate the activity so any DB tasks that failed before
 			// signing in can be retried
@@ -104,13 +112,13 @@ public abstract class BriarActivity extends BaseActivity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		if (!briarController.accountSignedIn() && !isFinishing()) {
+		if (!briarController.accountSignedIn() && !isFinishing() && !startupActivityFlag) {
 			// Also check that the activity isn't finishing already.
 			// This is possible if we finished in onActivityResult().
 			// Launching another StartupActivity would cause a loop.
-			LOG.info("Not signed in, launching StartupActivity");
-			Intent i = new Intent(this, StartupActivity.class);
-			startActivityForResult(i, REQUEST_PASSWORD);
+			LOG.info("Not signed in, launching TimerActivity");
+			Intent i = new Intent(this, TimerActivity.class);
+			startActivityForResult(i, REQUEST_PIN);
 		} else if (lockManager.isLocked() && !isFinishing()) {
 			// Also check that the activity isn't finishing already.
 			// This is possible if we finished in onActivityResult().
@@ -127,6 +135,14 @@ public abstract class BriarActivity extends BaseActivity {
 			});
 		}
 	}
+
+	boolean startupActivityFlag = false;
+	public void startupActivity(){
+		startupActivityFlag = true;
+		Intent i = new Intent(this, StartupActivity.class);
+		startActivityForResult(i, REQUEST_PASSWORD);
+	}
+
 
 	@Override
 	protected void onStop() {

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	tools:context=".android.timer.TimerPinFragment"
+	android:padding="@dimen/margin_activity_vertical">
+
+	<TextView
+		android:id="@+id/timerInputView"
+		android:layout_width="match_parent"
+		android:layout_height="100dp"
+		android:layout_marginBottom="15dp"
+		android:gravity="center"
+		android:text="00:00:00"
+		android:textAppearance="@style/TextAppearance.AppCompat.Large"
+		app:autoSizeTextType="uniform"
+		app:layout_constraintBottom_toTopOf="@+id/gridView"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="parent" />
+
+	<GridLayout
+		android:id="@+id/gridView"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="15dp"
+		android:columnCount="3"
+		android:orientation="horizontal"
+		android:drawSelectorOnTop="true"
+		app:layout_constraintBottom_toTopOf="@id/btn_sign_in"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toBottomOf="@id/timerInputView">
+
+
+		<Button
+			android:layout_width="80dp"
+			android:layout_height="80dp"
+			android:layout_margin="10dp"
+			android:background="@drawable/timer_button"
+			android:text="1"
+			android:textAppearance="@style/TextAppearance.AppCompat.Large"
+			android:textColor="#FFF" />
+
+		<Button
+			android:layout_width="80dp"
+			android:layout_height="80dp"
+			android:layout_margin="10dp"
+			android:background="@drawable/timer_button"
+			android:text="2"
+			android:textAppearance="@style/TextAppearance.AppCompat.Large"
+			android:textColor="#FFF" />
+
+		<Button
+			android:layout_width="80dp"
+			android:layout_height="80dp"
+			android:layout_margin="10dp"
+			android:background="@drawable/timer_button"
+			android:text="3"
+			android:textAppearance="@style/TextAppearance.AppCompat.Large"
+			android:textColor="#FFF" />
+
+		<Button
+			android:layout_width="80dp"
+			android:layout_height="80dp"
+			android:layout_margin="10dp"
+			android:background="@drawable/timer_button"
+			android:text="4"
+			android:textAppearance="@style/TextAppearance.AppCompat.Large"
+			android:textColor="#FFF" />
+
+		<Button
+			android:layout_width="80dp"
+			android:layout_height="80dp"
+			android:layout_margin="10dp"
+			android:background="@drawable/timer_button"
+			android:text="5"
+			android:textAppearance="@style/TextAppearance.AppCompat.Large"
+			android:textColor="#FFF" />
+
+		<Button
+			android:layout_width="80dp"
+			android:layout_height="80dp"
+			android:layout_margin="10dp"
+			android:background="@drawable/timer_button"
+			android:text="6"
+			android:textAppearance="@style/TextAppearance.AppCompat.Large"
+			android:textColor="#FFF" />
+
+		<Button
+			android:layout_width="80dp"
+			android:layout_height="80dp"
+			android:layout_margin="10dp"
+			android:background="@drawable/timer_button"
+			android:text="7"
+			android:textAppearance="@style/TextAppearance.AppCompat.Large"
+			android:textColor="#FFF" />
+
+		<Button
+			android:layout_width="80dp"
+			android:layout_height="80dp"
+			android:layout_margin="10dp"
+			android:background="@drawable/timer_button"
+			android:text="8"
+			android:textAppearance="@style/TextAppearance.AppCompat.Large"
+			android:textColor="#FFF" />
+
+		<Button
+			android:layout_width="80dp"
+			android:layout_height="80dp"
+			android:layout_margin="10dp"
+			android:background="@drawable/timer_button"
+			android:text="9"
+			android:textAppearance="@style/TextAppearance.AppCompat.Large"
+			android:textColor="#FFF" />
+
+
+		<Button
+			android:layout_width="80dp"
+			android:layout_height="80dp"
+			android:layout_columnSpan="3"
+			android:layout_gravity="center"
+			android:layout_margin="10dp"
+			android:background="@drawable/timer_button"
+			android:text="0"
+			android:textAppearance="@style/TextAppearance.AppCompat.Large"
+			android:textColor="#FFF" />
+
+
+	</GridLayout>
+
+
+	<Button
+		android:id="@+id/btn_sign_in"
+		android:layout_width="80dp"
+		android:layout_height="80dp"
+		android:layout_margin="10dp"
+		android:background="@drawable/timer_start_button"
+		android:text="@string/start_timer"
+		android:textAppearance="@style/TextAppearance.AppCompat.Large"
+		android:textColor="#FFF"
+		app:layout_constraintBottom_toBottomOf="parent"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toBottomOf="@+id/gridView" />
+
+	<ProgressBar
+		android:id="@+id/progress_wheel"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:visibility="invisible"
+		app:layout_constraintBottom_toBottomOf="@+id/btn_sign_in"
+		app:layout_constraintLeft_toLeftOf="parent"
+		app:layout_constraintRight_toRightOf="parent"
+		app:layout_constraintTop_toTopOf="@id/btn_sign_in" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

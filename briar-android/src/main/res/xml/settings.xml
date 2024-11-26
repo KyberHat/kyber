@@ -18,6 +18,15 @@
 		android:title="@string/security_settings_title"
 		app:fragment="org.briarproject.briar.android.settings.SecurityFragment"
 		app:icon="@drawable/ic_settings_security" />
+	<Preference
+		android:key="pref_key_change_timer_pin"
+		android:title="@string/change_timer_password"
+		app:icon="@drawable/ic_settings_security">
+
+		<intent
+			android:targetClass="org.briarproject.briar.android.timer.ChangeTimerPinActivity"
+			android:targetPackage="@string/app_package" />
+	</Preference>
 
 	<Preference
 		android:title="@string/notification_settings_title"

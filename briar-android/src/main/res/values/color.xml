@@ -46,11 +46,11 @@
 
 	<color name="briar_brand_blue">@color/briar_night_700</color>
 	<color name="briar_brand_green">@color/briar_lime_400</color>
-
+	<color name="kyber_brand_green">@color/briar_lime_400</color>
 	<color name="briar_primary">@color/briar_brand_blue</color>
 	<color name="briar_primary_dark">@color/briar_night_950</color>
 	<color name="briar_accent">@color/briar_brand_blue</color>
-
+	<color name="kyber_accent">@color/briar_brand_blue</color>
 	<color name="window_background">@color/briar_gray_100</color>
 	<color name="card_background">@color/cardview_light_background</color>
 	<color name="item_background_highlight">@color/briar_gray_200</color>

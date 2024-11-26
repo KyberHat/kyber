@@ -83,7 +83,9 @@ import org.briarproject.briar.android.sharing.ShareForumFragment;
 import org.briarproject.briar.android.sharing.SharingModule;
 import org.briarproject.briar.android.splash.SplashScreenActivity;
 import org.briarproject.briar.android.test.TestDataActivity;
-
+import org.briarproject.briar.android.timer.ChangeTimerPinActivity;
+import org.briarproject.briar.android.timer.TimerPinFragment;
+import org.briarproject.briar.android.timer.TimerActivity;
 import dagger.Component;
 
 @ActivityScope
@@ -102,6 +104,12 @@ public interface ActivityComponent {
 	void inject(SplashScreenActivity activity);
 
 	void inject(StartupActivity activity);
+
+	void inject(TimerActivity activity);
+
+	void inject(ChangeTimerPinActivity activity);
+
+	void inject(TimerPinFragment fragment);
 
 	void inject(SetupActivity activity);
 
