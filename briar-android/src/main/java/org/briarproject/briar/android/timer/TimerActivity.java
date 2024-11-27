@@ -12,6 +12,8 @@ import org.briarproject.briar.android.fragment.BaseFragment;
 import javax.inject.Inject;
 
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 
 import static android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK;
@@ -84,6 +86,12 @@ public class TimerActivity extends BaseActivity implements
 			setResult(RESULT_OK);
 			finish();
 		}
+	}
+
+	private boolean isFragmentAdded(String tag) {
+		FragmentManager fragmentManager = getSupportFragmentManager();
+		Fragment fragment = fragmentManager.findFragmentByTag(tag);
+		return fragment != null && fragment.isAdded();
 	}
 
 	private void onAccountDeleted() {
