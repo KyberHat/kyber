@@ -27,6 +27,7 @@ import javax.annotation.concurrent.Immutable;
 import static org.briarproject.bramble.api.identity.AuthorConstants.MAX_SIGNATURE_LENGTH;
 import static org.briarproject.bramble.util.ValidationUtils.checkLength;
 import static org.briarproject.bramble.util.ValidationUtils.checkSize;
+import static org.briarproject.briar.api.attachment.MediaConstants.MAX_IMAGE_SIZE;
 import static org.briarproject.briar.api.privategroup.GroupMessageFactory.SIGNING_LABEL_JOIN;
 import static org.briarproject.briar.api.privategroup.GroupMessageFactory.SIGNING_LABEL_POST;
 import static org.briarproject.briar.api.privategroup.MessageType.JOIN;
@@ -60,7 +61,7 @@ class GroupMessageValidator extends BdfMessageValidator {
 	protected BdfMessageContext validateMessage(Message m, Group g,
 			BdfList body) throws InvalidMessageException, FormatException {
 
-		checkSize(body, 4, 6);
+		checkSize(body, 4, 7);
 
 		// Message type (int)
 		int type = body.getInt(0);
@@ -145,14 +146,21 @@ class GroupMessageValidator extends BdfMessageValidator {
 			Author member) throws FormatException {
 		// Message type, member, optional parent ID, previous message ID,
 		// text, signature
-		checkSize(body, 6);
+		checkSize(body, 7);
 		byte[] parentId = body.getOptionalRaw(2);
 		checkLength(parentId, MessageId.LENGTH);
 		byte[] previousMessageId = body.getRaw(3);
 		checkLength(previousMessageId, MessageId.LENGTH);
-		String text = body.getString(4);
+		String text = body.getOptionalString(4);
 		checkLength(text, 1, MAX_GROUP_POST_TEXT_LENGTH);
-		byte[] signature = body.getRaw(5);
+
+		BdfList image = null;
+		if (body.get(5) instanceof BdfList) {
+			image = (BdfList) body.get(5);
+		}
+//		byte[] image = body.getOptionalRaw(5);
+//		checkLength(image, 1, MAX_IMAGE_SIZE);
+		byte[] signature = body.getRaw(6);
 		checkLength(signature, 1, MAX_SIGNATURE_LENGTH);
 
 		// Verify the member's signature
@@ -163,7 +171,8 @@ class GroupMessageValidator extends BdfMessageValidator {
 				memberList,
 				parentId,
 				previousMessageId,
-				text
+				text,
+				image
 		);
 		try {
 			clientHelper.verifySignature(signature, SIGNING_LABEL_POST,

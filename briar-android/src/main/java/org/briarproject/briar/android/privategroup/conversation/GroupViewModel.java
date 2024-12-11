@@ -2,8 +2,10 @@ package org.briarproject.briar.android.privategroup.conversation;
 
 import android.app.Application;
 
+import org.briarproject.bramble.api.FormatException;
 import org.briarproject.bramble.api.contact.ContactId;
 import org.briarproject.bramble.api.crypto.CryptoExecutor;
+import org.briarproject.bramble.api.data.BdfList;
 import org.briarproject.bramble.api.db.DatabaseExecutor;
 import org.briarproject.bramble.api.db.DbException;
 import org.briarproject.bramble.api.db.Transaction;
@@ -18,9 +20,12 @@ import org.briarproject.bramble.api.sync.GroupId;
 import org.briarproject.bramble.api.sync.MessageId;
 import org.briarproject.bramble.api.system.AndroidExecutor;
 import org.briarproject.bramble.api.system.Clock;
+import org.briarproject.briar.android.attachment.AttachmentCreator;
+import org.briarproject.briar.android.attachment.AttachmentRetriever;
 import org.briarproject.briar.android.sharing.SharingController;
 import org.briarproject.briar.android.threaded.ThreadListViewModel;
 import org.briarproject.briar.api.android.AndroidNotificationManager;
+import org.briarproject.briar.api.attachment.AttachmentHeader;
 import org.briarproject.briar.api.client.MessageTracker;
 import org.briarproject.briar.api.client.MessageTracker.GroupCount;
 import org.briarproject.briar.api.privategroup.GroupMember;
@@ -76,6 +81,8 @@ class GroupViewModel extends ThreadListViewModel<GroupMessageItem> {
 			LifecycleManager lifecycleManager,
 			TransactionManager db,
 			AndroidExecutor androidExecutor,
+			AttachmentCreator attachmentCreator,
+			AttachmentRetriever attachmentRetriever,
 			EventBus eventBus,
 			IdentityManager identityManager,
 			AndroidNotificationManager notificationManager,
@@ -87,7 +94,7 @@ class GroupViewModel extends ThreadListViewModel<GroupMessageItem> {
 			GroupMessageFactory groupMessageFactory) {
 		super(application, dbExecutor, lifecycleManager, db, androidExecutor,
 				identityManager, notificationManager, sharingController,
-				cryptoExecutor, clock, messageTracker, eventBus);
+				cryptoExecutor, clock, messageTracker, attachmentCreator, attachmentRetriever, eventBus);
 		this.privateGroupManager = privateGroupManager;
 		this.groupMessageFactory = groupMessageFactory;
 	}
@@ -99,7 +106,7 @@ class GroupViewModel extends ThreadListViewModel<GroupMessageItem> {
 			// only act on non-local messages in this group
 			if (!g.isLocal() && g.getGroupId().equals(groupId)) {
 				LOG.info("Group message received, adding...");
-				GroupMessageItem item = buildItem(g.getHeader(), g.getText());
+				GroupMessageItem item = buildItem(g.getHeader(), g.getText(), null);
 				addItem(item, false);
 				// In case the join message comes from the creator,
 				// we need to reload the sharing contacts
@@ -180,26 +187,36 @@ class GroupViewModel extends ThreadListViewModel<GroupMessageItem> {
 	private GroupMessageItem loadItem(Transaction txn,
 			GroupMessageHeader header) throws DbException {
 		String text;
+//		String contentType = privateGroupManager.getAttachmentHeaders(txn, header.getId()); // Fetch attachments
 		if (header instanceof JoinMessageHeader) {
 			// will be looked up later
 			text = "";
 		} else {
 			text = privateGroupManager.getMessageText(txn, header.getId());
 		}
-		return buildItem(header, text);
+//		List<AttachmentHeader> attachmentHeaders = new ArrayList<>();
+//		if (contentType != null && !contentType.isEmpty()) {
+//			attachmentHeaders.add(convertBDFlistToAttachmentHeader(groupId, header.getId(), contentType));
+//		}
+		return buildItem(header, text, null);
 	}
 
-	private GroupMessageItem buildItem(GroupMessageHeader header, String text) {
+	public static AttachmentHeader convertBDFlistToAttachmentHeader(GroupId gId, MessageId mId, String cType) {
+		return new AttachmentHeader(gId, mId, cType);
+	}
+
+	private GroupMessageItem buildItem(GroupMessageHeader header, String text, @Nullable List<AttachmentHeader> headers) {
 		if (header instanceof JoinMessageHeader) {
 			return new JoinMessageItem((JoinMessageHeader) header, text);
 		}
-		return new GroupMessageItem(header, text);
+		return new GroupMessageItem(header, text, headers);
 	}
 
 	@Override
-	public void createAndStoreMessage(String text,
+	public void createAndStoreMessage(String text, List<AttachmentHeader> headers,
 			@Nullable MessageId parentId) {
 		runOnDbThread(() -> {
+			LOG.info("image-test: -> inside createAndStoreMessage");
 			try {
 				LocalAuthor author = identityManager.getLocalAuthor();
 				MessageId previousMsgId =
@@ -207,8 +224,12 @@ class GroupViewModel extends ThreadListViewModel<GroupMessageItem> {
 				GroupCount count = privateGroupManager.getGroupCount(groupId);
 				long timestamp = count.getLatestMsgTime();
 				timestamp = max(clock.currentTimeMillis(), timestamp + 1);
-				createMessage(text, timestamp, parentId, author, previousMsgId);
+				LOG.info("image-test: -> calling createAndStoreMessage");
+				createMessage(text, headers, timestamp, parentId, author, previousMsgId);
+//				createMessage(text, timestamp, parentId, author, previousMsgId);
+				LOG.info("image-test: -> called createAndStoreMessage");
 			} catch (DbException e) {
+				LOG.info("image-test: -> createAndStoreMessage exception: " + e);
 				handleException(e);
 			}
 		});
@@ -221,18 +242,32 @@ class GroupViewModel extends ThreadListViewModel<GroupMessageItem> {
 			LOG.info("Creating group message...");
 			GroupMessage msg = groupMessageFactory.createGroupMessage(groupId,
 					timestamp, parentId, author, text, previousMsgId);
-			storePost(msg, text);
+			storePost(msg, text, null);
 		});
 	}
 
-	private void storePost(GroupMessage msg, String text) {
+	private void createMessage(String text, List<AttachmentHeader> headers, long timestamp,
+			@Nullable MessageId parentId, LocalAuthor author,
+			MessageId previousMsgId) {
+		cryptoExecutor.execute(() -> {
+			LOG.info("image-test: -> inside createMessage");
+			GroupMessage msg = groupMessageFactory.createGroupMessage(groupId,
+					timestamp, parentId, author, text, headers, previousMsgId);
+			LOG.info("image-test: -> storing post");
+			storePost(msg, text, headers);
+		});
+	}
+
+	private void storePost(GroupMessage msg, String text, List<AttachmentHeader> headers) {
 		runOnDbThread(false, txn -> {
 			long start = now();
+			LOG.info("image-test: -> inside store post");
 			GroupMessageHeader header =
-					privateGroupManager.addLocalMessage(txn, msg);
+					privateGroupManager.addLocalMessage(txn, msg, headers);
+			LOG.info("image-test: -> created header");
 			logDuration(LOG, "Storing group message", start);
 			txn.attach(() ->
-					addItem(buildItem(header, text), true)
+					addItem(buildItem(header, text, headers), true)
 			);
 		}, this::handleException);
 	}

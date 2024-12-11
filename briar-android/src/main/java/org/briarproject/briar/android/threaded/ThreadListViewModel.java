@@ -1,6 +1,7 @@
 package org.briarproject.briar.android.threaded;
 
 import android.app.Application;
+import android.net.Uri;
 
 import org.briarproject.bramble.api.crypto.CryptoExecutor;
 import org.briarproject.bramble.api.db.DatabaseExecutor;
@@ -17,17 +18,24 @@ import org.briarproject.bramble.api.sync.MessageId;
 import org.briarproject.bramble.api.sync.event.GroupRemovedEvent;
 import org.briarproject.bramble.api.system.AndroidExecutor;
 import org.briarproject.bramble.api.system.Clock;
+import org.briarproject.briar.android.attachment.AttachmentCreator;
+import org.briarproject.briar.android.attachment.AttachmentManager;
+import org.briarproject.briar.android.attachment.AttachmentResult;
+import org.briarproject.briar.android.attachment.AttachmentRetriever;
 import org.briarproject.briar.android.sharing.SharingController;
 import org.briarproject.briar.android.sharing.SharingController.SharingInfo;
 import org.briarproject.briar.android.viewmodel.DbViewModel;
 import org.briarproject.briar.android.viewmodel.LiveResult;
 import org.briarproject.briar.api.android.AndroidNotificationManager;
+import org.briarproject.briar.api.attachment.AttachmentHeader;
 import org.briarproject.briar.api.client.MessageTracker;
 import org.briarproject.briar.api.client.MessageTree;
+import org.briarproject.briar.api.messaging.event.AttachmentReceivedEvent;
 import org.briarproject.briar.client.MessageTreeImpl;
 import org.briarproject.nullsafety.MethodsNotNullByDefault;
 import org.briarproject.nullsafety.ParametersNotNullByDefault;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
@@ -47,7 +55,7 @@ import static java.util.logging.Logger.getLogger;
 @MethodsNotNullByDefault
 @ParametersNotNullByDefault
 public abstract class ThreadListViewModel<I extends ThreadItem>
-		extends DbViewModel implements EventListener {
+		extends DbViewModel implements EventListener, AttachmentManager {
 
 	private static final Logger LOG =
 			getLogger(ThreadListViewModel.class.getName());
@@ -69,7 +77,8 @@ public abstract class ThreadListViewModel<I extends ThreadItem>
 	private final AtomicReference<MessageId> scrollToItem =
 			new AtomicReference<>();
 
-	protected volatile GroupId groupId;
+	public GroupId groupId;
+	private final AttachmentRetriever attachmentRetriever;
 	@Nullable
 	private MessageId replyId;
 	/**
@@ -77,6 +86,7 @@ public abstract class ThreadListViewModel<I extends ThreadItem>
 	 */
 	private final AtomicReference<MessageId> storedMessageId =
 			new AtomicReference<>();
+	private final AttachmentCreator attachmentCreator;
 
 	public ThreadListViewModel(Application application,
 			@DatabaseExecutor Executor dbExecutor,
@@ -89,6 +99,8 @@ public abstract class ThreadListViewModel<I extends ThreadItem>
 			@CryptoExecutor Executor cryptoExecutor,
 			Clock clock,
 			MessageTracker messageTracker,
+			AttachmentCreator attachmentCreator,
+			AttachmentRetriever attachmentRetriever,
 			EventBus eventBus) {
 		super(application, dbExecutor, lifecycleManager, db, androidExecutor);
 		this.identityManager = identityManager;
@@ -98,6 +110,8 @@ public abstract class ThreadListViewModel<I extends ThreadItem>
 		this.sharingController = sharingController;
 		this.messageTracker = messageTracker;
 		this.eventBus = eventBus;
+		this.attachmentCreator = attachmentCreator;
+		this.attachmentRetriever = attachmentRetriever;
 		this.eventBus.addListener(this);
 	}
 
@@ -105,6 +119,7 @@ public abstract class ThreadListViewModel<I extends ThreadItem>
 	protected void onCleared() {
 		super.onCleared();
 		eventBus.removeListener(this);
+		attachmentCreator.cancel();  // also deletes unsent attachments
 		sharingController.onCleared();
 	}
 
@@ -137,6 +152,10 @@ public abstract class ThreadListViewModel<I extends ThreadItem>
 		notificationManager.unblockNotification(groupId);
 	}
 
+	public AttachmentRetriever getAttachmentRetriever() {
+		return attachmentRetriever;
+	}
+
 	@Override
 	@CallSuper
 	public void eventOccurred(Event e) {
@@ -146,6 +165,13 @@ public abstract class ThreadListViewModel<I extends ThreadItem>
 				LOG.info("Group removed");
 				groupRemoved.setValue(true);
 			}
+//		} else if (e instanceof AttachmentReceivedEvent) {
+//			AttachmentReceivedEvent a = (AttachmentReceivedEvent) e;
+//			if (a.getContactId().equals(contactId)) {
+//				LOG.info("Attachment received");
+//				runOnDbThread(() -> attachmentRetriever
+//						.loadAttachmentItem(a.getMessageId()));
+//			}
 		}
 	}
 
@@ -166,7 +192,7 @@ public abstract class ThreadListViewModel<I extends ThreadItem>
 
 	public abstract void loadItems();
 
-	public abstract void createAndStoreMessage(String text,
+	public abstract void createAndStoreMessage(String text, List<AttachmentHeader> headers,
 			@Nullable MessageId parentMessageId);
 
 	/**
@@ -198,7 +224,9 @@ public abstract class ThreadListViewModel<I extends ThreadItem>
 	protected void addItem(I item, boolean scrollToItem) {
 		// If items haven't loaded, we need to wait until they have.
 		// Since this was a R/W DB transaction, the load will pick up this item.
+		LOG.info("image-test: -> item added called");
 		if (items.getValue() == null) return;
+		LOG.info("image-test: -> item was not null");
 
 		messageTree.add(item);
 		if (scrollToItem) this.scrollToItem.set(item.getId());
@@ -258,6 +286,24 @@ public abstract class ThreadListViewModel<I extends ThreadItem>
 	@Nullable
 	MessageId getAndResetScrollToItem() {
 		return scrollToItem.getAndSet(null);
+	}
+
+	@Override
+	public LiveData<AttachmentResult> storeAttachments(Collection<Uri> uris,
+			boolean restart) {
+		// messagingGroupId is loaded with the contact
+		return attachmentCreator.storeAttachments(groupId, uris);
+
+	}
+
+	@Override
+	public List<AttachmentHeader> getAttachmentHeadersForSending() {
+		return attachmentCreator.getAttachmentHeadersForSending();
+	}
+
+	@Override
+	public void cancel() {
+		attachmentCreator.cancel();
 	}
 
 }

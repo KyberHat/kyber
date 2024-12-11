@@ -14,7 +14,7 @@ import androidx.lifecycle.LiveData;
 
 @NotThreadSafe
 @NotNullByDefault
-class ConversationMessageItem extends ConversationItem {
+public class ConversationMessageItem extends ConversationItem {
 
 	private final List<AttachmentItem> attachments;
 

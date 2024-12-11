@@ -19,9 +19,12 @@ import org.briarproject.bramble.api.sync.MessageId;
 import org.briarproject.bramble.api.system.AndroidExecutor;
 import org.briarproject.bramble.api.system.Clock;
 import org.briarproject.briar.R;
+import org.briarproject.briar.android.attachment.AttachmentCreator;
+import org.briarproject.briar.android.attachment.AttachmentRetriever;
 import org.briarproject.briar.android.sharing.SharingController;
 import org.briarproject.briar.android.threaded.ThreadListViewModel;
 import org.briarproject.briar.api.android.AndroidNotificationManager;
+import org.briarproject.briar.api.attachment.AttachmentHeader;
 import org.briarproject.briar.api.client.MessageTracker;
 import org.briarproject.briar.api.client.MessageTracker.GroupCount;
 import org.briarproject.briar.api.forum.Forum;
@@ -75,12 +78,14 @@ class ForumViewModel extends ThreadListViewModel<ForumPostItem> {
 			@CryptoExecutor Executor cryptoExecutor,
 			Clock clock,
 			MessageTracker messageTracker,
+			AttachmentCreator attachmentCreator,
+			AttachmentRetriever attachmentRetriever,
 			EventBus eventBus,
 			ForumManager forumManager,
 			ForumSharingManager forumSharingManager) {
 		super(application, dbExecutor, lifecycleManager, db, androidExecutor,
 				identityManager, notificationManager, sharingController,
-				cryptoExecutor, clock, messageTracker, eventBus);
+				cryptoExecutor, clock, messageTracker, attachmentCreator, attachmentRetriever, eventBus);
 		this.forumManager = forumManager;
 		this.forumSharingManager = forumSharingManager;
 	}
@@ -156,7 +161,7 @@ class ForumViewModel extends ThreadListViewModel<ForumPostItem> {
 	}
 
 	@Override
-	public void createAndStoreMessage(String text,
+	public void createAndStoreMessage(String text, List<AttachmentHeader> headers,
 			@Nullable MessageId parentId) {
 		runOnDbThread(() -> {
 			try {

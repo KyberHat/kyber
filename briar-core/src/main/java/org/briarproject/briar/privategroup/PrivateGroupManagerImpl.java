@@ -21,6 +21,7 @@ import org.briarproject.bramble.api.sync.Group;
 import org.briarproject.bramble.api.sync.GroupId;
 import org.briarproject.bramble.api.sync.Message;
 import org.briarproject.bramble.api.sync.MessageId;
+import org.briarproject.briar.api.attachment.AttachmentHeader;
 import org.briarproject.briar.api.client.MessageTracker;
 import org.briarproject.briar.api.client.MessageTracker.GroupCount;
 import org.briarproject.briar.api.client.ProtocolStateException;
@@ -76,6 +77,7 @@ import static org.briarproject.briar.privategroup.GroupConstants.KEY_PREVIOUS_MS
 import static org.briarproject.briar.privategroup.GroupConstants.KEY_READ;
 import static org.briarproject.briar.privategroup.GroupConstants.KEY_TIMESTAMP;
 import static org.briarproject.briar.privategroup.GroupConstants.KEY_TYPE;
+import static org.briarproject.onionwrapper.TorWrapper.LOG;
 
 @ThreadSafe
 @NotNullByDefault
@@ -222,17 +224,53 @@ class PrivateGroupManagerImpl extends BdfIncomingMessageHook
 			GroupId g = m.getMessage().getGroupId();
 			clientHelper
 					.addLocalMessage(txn, m.getMessage(), meta, true, false);
+			LOG.info("image-test: -> local message added.....");
 			// track message
 			setPreviousMsgId(txn, g, m.getMessage().getId());
 			messageTracker.trackOutgoingMessage(txn, m.getMessage());
+			LOG.info("image-test: -> trackOutgoingMessage");
 			// broadcast event
 			attachGroupMessageAddedEvent(txn, m.getMessage(), meta, true);
+			LOG.info("image-test: -> attachGroupMessageAddedEvent");
 			AuthorInfo authorInfo = authorManager.getMyAuthorInfo(txn);
 			return new GroupMessageHeader(m.getMessage().getGroupId(),
 					m.getMessage().getId(), m.getParent(),
 					m.getMessage().getTimestamp(), m.getMember(), authorInfo,
-					true);
+					true, null);
 		} catch (FormatException e) {
+			LOG.info("image-test: -> FormatException: " + e);
+			throw new DbException(e);
+		}
+	}
+
+	@Override
+	public GroupMessageHeader addLocalMessage(Transaction txn, GroupMessage m, List<AttachmentHeader> headers)
+			throws DbException {
+		try {
+			// store message and metadata
+			BdfDictionary meta = new BdfDictionary();
+			meta.put(KEY_TYPE, POST.getInt());
+			if (m.getParent() != null)
+				meta.put(KEY_PARENT_MSG_ID, m.getParent());
+			addMessageMetadata(meta, m);
+			GroupId g = m.getMessage().getGroupId();
+			clientHelper
+					.addLocalMessage(txn, m.getMessage(), meta, true, false);
+			LOG.info("image-test: -> local message added.....");
+			// track message
+			setPreviousMsgId(txn, g, m.getMessage().getId());
+			messageTracker.trackOutgoingMessage(txn, m.getMessage());
+			LOG.info("image-test: -> trackOutgoingMessage");
+			// broadcast event
+			attachGroupMessageAddedEvent(txn, m.getMessage(), meta, true);
+			LOG.info("image-test: -> attachGroupMessageAddedEvent");
+			AuthorInfo authorInfo = authorManager.getMyAuthorInfo(txn);
+			return new GroupMessageHeader(m.getMessage().getGroupId(),
+					m.getMessage().getId(), m.getParent(),
+					m.getMessage().getTimestamp(), m.getMember(), authorInfo,
+					true, headers);
+		} catch (FormatException e) {
+			LOG.info("image-test: -> FormatException: " + e);
 			throw new DbException(e);
 		}
 	}
@@ -331,8 +369,12 @@ class PrivateGroupManagerImpl extends BdfIncomingMessageHook
 
 	private String getMessageText(BdfList body) throws FormatException {
 		// Message type (0), member (1), parent ID (2), previous message ID (3),
-		// text (4), signature (5)
-		return body.getString(4);
+		// text (4), image (5), signature (6)
+		if (body.get(4) instanceof String) {
+			return body.getString(4);
+		} else {
+			return "";
+		}
 	}
 
 	@Override
@@ -396,7 +438,7 @@ class PrivateGroupManagerImpl extends BdfIncomingMessageHook
 		boolean read = meta.getBoolean(KEY_READ);
 
 		return new GroupMessageHeader(g, id, parentId, timestamp, member,
-				authorInfo, read);
+				authorInfo, read, null);
 	}
 
 	private JoinMessageHeader getJoinMessageHeader(Transaction txn, GroupId g,
@@ -603,11 +645,15 @@ class PrivateGroupManagerImpl extends BdfIncomingMessageHook
 	private void attachGroupMessageAddedEvent(Transaction txn, Message m,
 			BdfDictionary meta, boolean local)
 			throws DbException, FormatException {
+		LOG.info("image-test: -> inside attachGroupMessageAddedEvent");
 		GroupMessageHeader header = getGroupMessageHeader(txn, m.getGroupId(),
 				m.getId(), meta, Collections.emptyMap());
+		LOG.info("image-test: -> attachGroupMessageAddedEvent header created");
 		String text = getMessageText(clientHelper.toList(m));
+		LOG.info("image-test: -> attachGroupMessageAddedEvent text created");
 		txn.attach(new GroupMessageAddedEvent(m.getGroupId(), header, text,
 				local));
+		LOG.info("image-test: -> attachGroupMessageAddedEvent function complete");
 	}
 
 	private void attachJoinMessageAddedEvent(Transaction txn, Message m,

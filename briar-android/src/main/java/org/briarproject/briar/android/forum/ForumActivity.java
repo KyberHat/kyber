@@ -138,4 +138,13 @@ public class ForumActivity extends
 		builder.show();
 	}
 
+	@Override
+	public void onAttachImageClicked() {
+
+	}
+
+	@Override
+	public void onTooManyAttachments() {
+
+	}
 }

@@ -33,7 +33,7 @@ import static org.briarproject.briar.android.util.UiUtils.getContactDisplayName;
 
 @UiThread
 @NotNullByDefault
-class ConversationVisitor implements
+public class ConversationVisitor implements
 		ConversationMessageVisitor<ConversationItem> {
 
 	private final Context ctx;
@@ -330,7 +330,7 @@ class ConversationVisitor implements
 		String getText(MessageId m);
 	}
 
-	interface AttachmentCache {
+	public interface AttachmentCache {
 		List<AttachmentItem> getAttachmentItems(PrivateMessageHeader h);
 	}
 }

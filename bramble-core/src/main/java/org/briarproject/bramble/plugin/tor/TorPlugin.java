@@ -357,6 +357,7 @@ class TorPlugin implements DuplexPlugin, EventListener {
 	public DuplexTransportConnection createConnection(TransportProperties p) {
 		if (getState() != ACTIVE) return null;
 		String onion3 = p.get(PROP_ONION_V3);
+		LOG.info("onion-test: -> create connection: " + p.get(PROP_ONION_V3));
 		if (onion3 != null && !ONION_V3.matcher(onion3).matches()) {
 			// Don't scrub the address so we can find the problem
 			if (LOG.isLoggable(INFO)) {
@@ -373,12 +374,12 @@ class TorPlugin implements DuplexPlugin, EventListener {
 			s = torSocketFactory.createSocket(onion3 + ".onion", 80);
 			s.setSoTimeout(socketTimeout);
 			if (LOG.isLoggable(INFO)) {
-				LOG.info("Connected to v3 " + scrubOnion(onion3));
+				LOG.info("onion-test: Connected to v3 " + scrubOnion(onion3));
 			}
 			return new TorTransportConnection(this, s);
 		} catch (IOException e) {
 			if (LOG.isLoggable(INFO)) {
-				LOG.info("Could not connect to v3 "
+				LOG.info("onion-test: Could not connect to v3 "
 						+ scrubOnion(onion3) + ": " + e);
 			}
 			tryToClose(s, LOG, WARNING);
@@ -419,34 +420,47 @@ class TorPlugin implements DuplexPlugin, EventListener {
 		String remoteOnion = torRendezvousCrypto.getOnion(remoteSeed);
 		TransportProperties remoteProperties = new TransportProperties();
 		remoteProperties.put(PROP_ONION_V3, remoteOnion);
+		LOG.info("onion-test: -> create endpoint - local: " + localOnion);
+		LOG.info("onion-test: -> create endpoint - remote: " + remoteOnion);
+		LOG.info("SocketConnection: tor plugin 1");
 		try {
 			@SuppressWarnings("resource")
 			ServerSocket ss = new ServerSocket();
+			LOG.info("SocketConnection: tor plugin 2");
 			ss.bind(new InetSocketAddress("127.0.0.1", 0));
+			LOG.info("SocketConnection: tor plugin 3");
 			int port = ss.getLocalPort();
+			LOG.info("SocketConnection: tor plugin 4");
 			ioExecutor.execute(() -> {
 				try {
 					//noinspection InfiniteLoopStatement
 					while (true) {
+						LOG.info("SocketConnection: tor plugin 4.1");
 						Socket s = ss.accept();
+						LOG.info("SocketConnection: tor plugin 5");
 						incoming.handleConnection(
 								new TorTransportConnection(this, s));
+						LOG.info("SocketConnection: tor plugin 6");
 					}
 				} catch (IOException e) {
+					LOG.info("SocketConnection: tor plugin 7");
 					// This is expected when the server socket is closed
 					LOG.info("Rendezvous server socket closed");
 				}
 			});
+			LOG.info("SocketConnection: tor plugin 8");
 			tor.publishHiddenService(port, 80, blob);
 			return new RendezvousEndpoint() {
 
 				@Override
 				public TransportProperties getRemoteTransportProperties() {
+					LOG.info("SocketConnection: tor plugin 9");
 					return remoteProperties;
 				}
 
 				@Override
 				public void close() throws IOException {
+					LOG.info("SocketConnection: tor plugin 10");
 					try {
 						tor.removeHiddenService(localOnion);
 					} finally {
@@ -455,6 +469,7 @@ class TorPlugin implements DuplexPlugin, EventListener {
 				}
 			};
 		} catch (IOException e) {
+			LOG.info("SocketConnection: tor plugin 11");
 			logException(LOG, WARNING, e);
 			return null;
 		}

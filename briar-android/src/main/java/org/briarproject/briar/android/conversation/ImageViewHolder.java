@@ -15,6 +15,7 @@ import org.briarproject.briar.android.conversation.glide.Radii;
 import org.briarproject.nullsafety.NotNullByDefault;
 
 import androidx.annotation.DrawableRes;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager.LayoutParams;
 
@@ -26,23 +27,24 @@ import static org.briarproject.briar.android.attachment.AttachmentItem.State.AVA
 import static org.briarproject.briar.android.attachment.AttachmentItem.State.ERROR;
 
 @NotNullByDefault
-class ImageViewHolder extends ViewHolder {
+public class ImageViewHolder extends ViewHolder {
 
 	@DrawableRes
 	private static final int ERROR_RES = R.drawable.ic_image_broken;
 
 	protected final ImageView imageView;
 	private final int imageSize;
+	@Nullable
 	private final MessageId conversationItemId;
 
-	ImageViewHolder(View v, int imageSize, MessageId conversationItemId) {
+	public ImageViewHolder(View v, int imageSize, @Nullable MessageId conversationItemId) {
 		super(v);
 		imageView = v.findViewById(R.id.imageView);
 		this.imageSize = imageSize;
 		this.conversationItemId = conversationItemId;
 	}
 
-	void bind(AttachmentItem attachment, Radii r, boolean single,
+	public void bind(AttachmentItem attachment, Radii r, boolean single,
 			boolean needsStretch) {
 		setImageViewDimensions(attachment, single, needsStretch);
 		if (attachment.getState() != AVAILABLE) {
@@ -57,8 +59,10 @@ class ImageViewHolder extends ViewHolder {
 			loadImage(attachment, r);
 			imageView.setScaleType(CENTER_CROP);
 		}
-		imageView.setTransitionName(
-				attachment.getTransitionName(conversationItemId));
+		if (conversationItemId != null) {
+			imageView.setTransitionName(
+					attachment.getTransitionName(conversationItemId));
+		}
 	}
 
 	private void setImageViewDimensions(AttachmentItem a, boolean single,

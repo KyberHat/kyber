@@ -46,6 +46,21 @@
 			app:layout_constraintTop_toTopOf="parent"
 			tools:visibility="visible" />
 
+		<androidx.recyclerview.widget.RecyclerView
+			android:id="@+id/nestedImageList"
+			android:layout_width="@dimen/message_bubble_image_default"
+			android:layout_height="@dimen/message_bubble_image_default"
+			android:orientation="vertical"
+			android:visibility="gone"
+			app:layoutManager="androidx.recyclerview.widget.StaggeredGridLayoutManager"
+			app:layout_constraintBottom_toTopOf="@+id/nested_line_text"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="parent"
+			app:spanCount="2"
+			tools:ignore="ContentDescription"
+			tools:listitem="@layout/list_item_image" />
+
 		<TextView
 			android:id="@+id/nested_line_text"
 			android:layout_width="@dimen/forum_nested_indicator"
@@ -105,6 +120,21 @@
 			android:textSize="@dimen/text_size_tiny"
 			app:layout_constraintEnd_toEndOf="parent"
 			app:layout_constraintTop_toBottomOf="@+id/divider" />
+
+		<androidx.recyclerview.widget.RecyclerView
+			android:id="@+id/imageList"
+			android:layout_width="@dimen/message_bubble_image_default"
+			android:layout_height="@dimen/message_bubble_image_default"
+			android:orientation="vertical"
+			android:visibility="gone"
+			app:layoutManager="androidx.recyclerview.widget.StaggeredGridLayoutManager"
+			app:layout_constraintBottom_toTopOf="@+id/text"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="parent"
+			app:spanCount="2"
+			tools:ignore="ContentDescription"
+			tools:listitem="@layout/list_item_image" />
 
 		<com.vanniktech.emoji.EmojiTextView
 			android:id="@+id/text"

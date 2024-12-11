@@ -21,6 +21,10 @@ public interface AttachmentCreator {
 	LiveData<AttachmentResult> storeAttachments(LiveData<GroupId> groupId,
 			Collection<Uri> newUris);
 
+	@UiThread
+	LiveData<AttachmentResult> storeAttachments(GroupId groupId,
+			Collection<Uri> newUris);
+
 	/**
 	 * This should be only called after configuration changes.
 	 * In this case we should not create new attachments.

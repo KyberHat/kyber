@@ -98,6 +98,27 @@ class AttachmentCreatorImpl implements AttachmentCreator {
 
 	@Override
 	@UiThread
+	public LiveData<AttachmentResult> storeAttachments(
+			GroupId groupId, Collection<Uri> newUris) {
+		if (task != null || result != null || !uris.isEmpty()) {
+			if (task != null) LOG.warning("Task already exists!");
+			if (result != null) LOG.warning("Result already exists!");
+			if (!uris.isEmpty()) LOG.warning("Uris available: " + uris);
+			throw new IllegalStateException();
+		}
+		MutableLiveData<AttachmentResult> result = new MutableLiveData<>();
+		this.result = result;
+		uris.addAll(newUris);
+		boolean needsSize = uris.size() == 1;
+		task = new AttachmentCreationTask(messagingManager,
+				app.getContentResolver(), this, imageCompressor, groupId,
+				uris, needsSize);
+		ioExecutor.execute(() -> task.storeAttachments());
+		return result;
+	}
+
+	@Override
+	@UiThread
 	public LiveData<AttachmentResult> getLiveAttachments() {
 		MutableLiveData<AttachmentResult> result = this.result;
 		if (task == null || result == null || uris.isEmpty()) {

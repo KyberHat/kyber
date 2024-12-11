@@ -8,6 +8,7 @@ import org.briarproject.bramble.api.identity.AuthorId;
 import org.briarproject.bramble.api.sync.ClientId;
 import org.briarproject.bramble.api.sync.GroupId;
 import org.briarproject.bramble.api.sync.MessageId;
+import org.briarproject.briar.api.attachment.AttachmentHeader;
 import org.briarproject.briar.api.client.MessageTracker.GroupCount;
 import org.briarproject.nullsafety.NotNullByDefault;
 
@@ -96,6 +97,12 @@ public interface PrivateGroupManager {
 	 * Stores and sends a local private group message.
 	 */
 	GroupMessageHeader addLocalMessage(Transaction txn, GroupMessage p)
+			throws DbException;
+
+	/**
+	 * Stores and sends a local private group message.
+	 */
+	GroupMessageHeader addLocalMessage(Transaction txn, GroupMessage p, List<AttachmentHeader> headers)
 			throws DbException;
 
 	/**

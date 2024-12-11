@@ -4,10 +4,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.briarproject.bramble.api.Pair;
 import org.briarproject.bramble.api.sync.MessageId;
 import org.briarproject.briar.R;
+import org.briarproject.briar.android.conversation.ConversationMessageItem;
+import org.briarproject.briar.android.privategroup.conversation.GroupMessageItem;
 import org.briarproject.briar.android.util.ItemReturningAdapter;
+import org.briarproject.briar.api.attachment.AttachmentHeader;
 import org.briarproject.nullsafety.NotNullByDefault;
+
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -134,6 +140,17 @@ public class ThreadItemAdapter<I extends ThreadItem>
 	public I getItemAt(int position) {
 		return getItem(position);
 	}
+
+//	@Nullable
+//	Pair<Integer, GroupMessageItem> getMessageItem(MessageId messageId, List<AttachmentHeader> items) {
+//		for (int i = 0; i < items.size(); i++) {
+//			AttachmentHeader item = items.get(i);
+//			if (item.getMessageId().equals(messageId)) {
+//				return new Pair<>(i, (GroupMessageItem) item);
+//			}
+//		}
+//		return null;
+//	}
 
 	public interface ThreadItemListener<I> {
 		void onReplyClick(I item);

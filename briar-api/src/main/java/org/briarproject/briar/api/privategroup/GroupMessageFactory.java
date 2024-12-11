@@ -4,8 +4,10 @@ import org.briarproject.bramble.api.crypto.CryptoExecutor;
 import org.briarproject.bramble.api.identity.LocalAuthor;
 import org.briarproject.bramble.api.sync.GroupId;
 import org.briarproject.bramble.api.sync.MessageId;
+import org.briarproject.briar.api.attachment.AttachmentHeader;
 import org.briarproject.nullsafety.NotNullByDefault;
 
+import java.util.List;
 import javax.annotation.Nullable;
 
 import static org.briarproject.briar.api.privategroup.PrivateGroupManager.CLIENT_ID;
@@ -58,6 +60,25 @@ public interface GroupMessageFactory {
 	@CryptoExecutor
 	GroupMessage createGroupMessage(GroupId groupId, long timestamp,
 			@Nullable MessageId parentId, LocalAuthor author, String text,
+			MessageId previousMsgId);
+
+	/**
+	 * Creates a private group post.
+	 *
+	 * @param groupId The ID of the private group
+	 * @param timestamp Must be greater than the timestamps of the parent
+	 * post, if any, and the member's previous message
+	 * @param parentId The ID of the parent post, or null if the post has no
+	 * parent
+	 * @param author The author of the post
+	 * @param text The text of the post
+	 * @param headers Attached image
+	 * @param previousMsgId The ID of the author's previous message
+	 * in this group
+	 */
+	@CryptoExecutor
+	GroupMessage createGroupMessage(GroupId groupId, long timestamp,
+			@Nullable MessageId parentId, LocalAuthor author, String text, List<AttachmentHeader> headers,
 			MessageId previousMsgId);
 
 }

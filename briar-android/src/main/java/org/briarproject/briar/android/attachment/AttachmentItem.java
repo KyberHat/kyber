@@ -64,7 +64,7 @@ public class AttachmentItem implements Parcelable {
 	/**
 	 * Use only for {@link State MISSING} or {@link State LOADING} items.
 	 */
-	AttachmentItem(AttachmentHeader header, int width, int height,
+	public AttachmentItem(AttachmentHeader header, int width, int height,
 			State state) {
 		this(header, width, height, "", width, height, state);
 		if (state != MISSING && state != LOADING)

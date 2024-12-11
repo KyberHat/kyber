@@ -12,14 +12,24 @@ import android.widget.TextView;
 
 import org.briarproject.bramble.util.StringUtils;
 import org.briarproject.briar.R;
+import org.briarproject.briar.android.privategroup.conversation.GroupMessageItem;
 import org.briarproject.briar.android.threaded.ThreadItemAdapter.ThreadItemListener;
 import org.briarproject.briar.android.view.AuthorView;
+import org.briarproject.briar.api.attachment.AttachmentHeader;
 import org.briarproject.nullsafety.NotNullByDefault;
+
+import java.util.List;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.UiThread;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
+import static androidx.constraintlayout.widget.ConstraintSet.WRAP_CONTENT;
 import static androidx.core.content.ContextCompat.getColor;
 import static org.briarproject.briar.android.util.UiUtils.makeLinksClickable;
 
@@ -31,8 +41,11 @@ public abstract class BaseThreadItemViewHolder<I extends ThreadItem>
 	private final static int ANIMATION_DURATION = 5000;
 
 	protected final TextView textView;
-	private final ViewGroup layout;
+	protected final RecyclerView imageList;
+	protected final ConstraintLayout layout;
 	private final AuthorView author;
+	private final ConstraintSet imageConstraints = new ConstraintSet();
+	private final ConstraintSet imageTextConstraints = new ConstraintSet();
 
 	public BaseThreadItemViewHolder(View v) {
 		super(v);
@@ -40,17 +53,24 @@ public abstract class BaseThreadItemViewHolder<I extends ThreadItem>
 		layout = v.findViewById(R.id.layout);
 		textView = v.findViewById(R.id.text);
 		author = v.findViewById(R.id.author);
+		imageList = v.findViewById(R.id.imageList);
+
+		imageConstraints.clone(v.getContext(),
+				R.layout.list_item_conversation_msg_image);
+		imageTextConstraints.clone(v.getContext(),
+				R.layout.list_item_conversation_msg_image_text);
 	}
 
 	@CallSuper
 	public void bind(I item, ThreadItemListener<I> listener) {
-		textView.setText(StringUtils.trim(item.getText()));
+		if (item.getText() != null) {
+			textView.setText(StringUtils.trim(item.getText()));
+		}
 		Linkify.addLinks(textView, Linkify.WEB_URLS);
 		makeLinksClickable(textView, listener::onLinkClick);
 
 		author.setAuthor(item.getAuthor(), item.getAuthorInfo());
 		author.setDate(item.getTimestamp());
-
 		if (item.isHighlighted()) {
 			layout.setActivated(true);
 		} else if (!item.isRead()) {
@@ -97,4 +117,34 @@ public abstract class BaseThreadItemViewHolder<I extends ThreadItem>
 		return textView.getContext();
 	}
 
+	private void bindImageItem(GroupMessageItem item) {
+		List<AttachmentHeader> imageAttachments = item.getHeaders();
+
+		if (imageAttachments != null && !imageAttachments.isEmpty()) {
+			// Show the RecyclerView with images
+			RecyclerView imageRecyclerView = layout.findViewById(R.id.imageList);
+			imageRecyclerView.setVisibility(VISIBLE);
+
+			ImageAdapter imageAdapter = new ImageAdapter(getContext()); // Pass the image attachments to the adapter
+			imageRecyclerView.setAdapter(imageAdapter);
+
+			// Set up the LayoutManager if not already set
+			if (imageRecyclerView.getLayoutManager() == null) {
+				StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+				imageRecyclerView.setLayoutManager(layoutManager);
+			}
+
+			// Apply the appropriate constraints based on whether text is present
+			ConstraintSet
+					constraintSet = (item.getText() == null) ? imageConstraints : imageTextConstraints;
+			constraintSet.constrainWidth(R.id.imageList, WRAP_CONTENT);
+			constraintSet.constrainHeight(R.id.imageList, WRAP_CONTENT);
+			constraintSet.applyTo(layout);
+
+			imageAdapter.setGroupMessageItem(item);
+		} else {
+			// If no images, hide the RecyclerView
+			layout.findViewById(R.id.imageList).setVisibility(GONE);
+		}
+	}
 }
